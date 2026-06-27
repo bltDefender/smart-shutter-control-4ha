@@ -1,0 +1,110 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Smart Shutter – Grundkonfiguration",
+        "description": "Standort, Temperatursensoren und Aktivierungsschwelle festlegen.",
+        "data": {
+          "latitude": "Breitengrad",
+          "longitude": "Längengrad",
+          "temperature_sensors": "Temperatursensor(en)",
+          "temperature_threshold": "Temperaturschwelle (°C)",
+          "sunset_type": "Sonnenuntergang-Typ"
+        },
+        "data_description": {
+          "temperature_sensors": "Wird gemittelt, wenn mehrere Sensoren ausgewählt sind.",
+          "sunset_type": "Bestimmt, wann die Automatik abends deaktiviert wird.",
+          "temperature_threshold": "Rollladen werden erst ab dieser Außentemperatur gesteuert."
+        }
+      }
+    },
+    "error": {
+      "no_sensors": "Mindestens ein Temperatursensor muss ausgewählt werden."
+    },
+    "abort": {
+      "already_configured": "Smart Shutter ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Smart Shutter – Einstellungen",
+        "menu_options": {
+          "add_window": "Fenster hinzufügen",
+          "select_edit": "Fenster bearbeiten",
+          "select_remove": "Fenster entfernen",
+          "global_settings": "Globale Einstellungen"
+        }
+      },
+      "global_settings": {
+        "title": "Globale Einstellungen",
+        "data": {
+          "latitude": "Breitengrad",
+          "longitude": "Längengrad",
+          "temperature_sensors": "Temperatursensor(en)",
+          "temperature_threshold": "Temperaturschwelle (°C)",
+          "sunset_type": "Sonnenuntergang-Typ"
+        }
+      },
+      "add_window": {
+        "title": "Fenster hinzufügen",
+        "data": {
+          "name": "Bezeichnung",
+          "orientation": "Ausrichtung (Kompassgrad, Blickrichtung des Fensters)",
+          "cover_entity": "Rollladen-Entität",
+          "position_open": "Position Voll geöffnet (%)",
+          "position_half": "Position Halb geschlossen (%)",
+          "position_closed": "Position Voll geschlossen (%)",
+          "angle_fully_closed": "Winkelbereich Voll schließen (°)",
+          "angle_half_closed": "Winkelbereich Halb schließen (°)"
+        },
+        "data_description": {
+          "orientation": "0° = Norden, 90° = Osten, 180° = Süden, 270° = Westen.",
+          "angle_fully_closed": "Unter diesem Winkelabstand zur Sonne wird voll geschlossen.",
+          "angle_half_closed": "Unter diesem Winkelabstand zur Sonne wird halb geschlossen."
+        }
+      },
+      "select_edit": {
+        "title": "Fenster zum Bearbeiten wählen",
+        "data": {
+          "window_id": "Fenster"
+        }
+      },
+      "edit_window": {
+        "title": "Fenster bearbeiten",
+        "data": {
+          "name": "Bezeichnung",
+          "orientation": "Ausrichtung (Kompassgrad)",
+          "cover_entity": "Rollladen-Entität",
+          "position_open": "Position Voll geöffnet (%)",
+          "position_half": "Position Halb geschlossen (%)",
+          "position_closed": "Position Voll geschlossen (%)",
+          "angle_fully_closed": "Winkelbereich Voll schließen (°)",
+          "angle_half_closed": "Winkelbereich Halb schließen (°)"
+        }
+      },
+      "select_remove": {
+        "title": "Fenster entfernen",
+        "data": {
+          "window_id": "Zu entfernendes Fenster"
+        }
+      }
+    },
+    "error": {
+      "name_required": "Bitte gib einen Namen für das Fenster an.",
+      "angle_half_must_exceed_closed": "Winkelbereich Halb schließen muss größer sein als Voll schließen."
+    },
+    "abort": {
+      "no_windows": "Keine Fenster vorhanden."
+    }
+  },
+  "selector": {
+    "sunset_type": {
+      "options": {
+        "civil": "Bürgerliche Dämmerung (−6°)",
+        "nautical": "Nautische Dämmerung (−12°)",
+        "astronomical": "Astronomische Dämmerung (−18°)"
+      }
+    }
+  }
+}

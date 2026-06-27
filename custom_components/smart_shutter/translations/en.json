@@ -1,0 +1,110 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Smart Shutter – Basic Configuration",
+        "description": "Set your location, temperature sensors and activation threshold.",
+        "data": {
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "temperature_sensors": "Temperature sensor(s)",
+          "temperature_threshold": "Temperature threshold (°C)",
+          "sunset_type": "Sunset type"
+        },
+        "data_description": {
+          "temperature_sensors": "Averaged when multiple sensors are selected.",
+          "sunset_type": "Determines when the automation is deactivated in the evening.",
+          "temperature_threshold": "Shutters are only controlled above this outdoor temperature."
+        }
+      }
+    },
+    "error": {
+      "no_sensors": "At least one temperature sensor must be selected."
+    },
+    "abort": {
+      "already_configured": "Smart Shutter is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Smart Shutter – Settings",
+        "menu_options": {
+          "add_window": "Add window",
+          "select_edit": "Edit window",
+          "select_remove": "Remove window",
+          "global_settings": "Global settings"
+        }
+      },
+      "global_settings": {
+        "title": "Global Settings",
+        "data": {
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "temperature_sensors": "Temperature sensor(s)",
+          "temperature_threshold": "Temperature threshold (°C)",
+          "sunset_type": "Sunset type"
+        }
+      },
+      "add_window": {
+        "title": "Add Window",
+        "data": {
+          "name": "Name",
+          "orientation": "Orientation (compass bearing, direction window faces)",
+          "cover_entity": "Shutter entity",
+          "position_open": "Position fully open (%)",
+          "position_half": "Position half-closed (%)",
+          "position_closed": "Position fully closed (%)",
+          "angle_fully_closed": "Fully-close angle zone (°)",
+          "angle_half_closed": "Half-close angle zone (°)"
+        },
+        "data_description": {
+          "orientation": "0° = North, 90° = East, 180° = South, 270° = West.",
+          "angle_fully_closed": "Below this angular distance to the sun the shutter is fully closed.",
+          "angle_half_closed": "Below this angular distance to the sun the shutter is half-closed."
+        }
+      },
+      "select_edit": {
+        "title": "Select Window to Edit",
+        "data": {
+          "window_id": "Window"
+        }
+      },
+      "edit_window": {
+        "title": "Edit Window",
+        "data": {
+          "name": "Name",
+          "orientation": "Orientation (compass bearing)",
+          "cover_entity": "Shutter entity",
+          "position_open": "Position fully open (%)",
+          "position_half": "Position half-closed (%)",
+          "position_closed": "Position fully closed (%)",
+          "angle_fully_closed": "Fully-close angle zone (°)",
+          "angle_half_closed": "Half-close angle zone (°)"
+        }
+      },
+      "select_remove": {
+        "title": "Remove Window",
+        "data": {
+          "window_id": "Window to remove"
+        }
+      }
+    },
+    "error": {
+      "name_required": "Please provide a name for the window.",
+      "angle_half_must_exceed_closed": "Half-close angle must be greater than fully-close angle."
+    },
+    "abort": {
+      "no_windows": "No windows configured."
+    }
+  },
+  "selector": {
+    "sunset_type": {
+      "options": {
+        "civil": "Civil twilight (−6°)",
+        "nautical": "Nautical twilight (−12°)",
+        "astronomical": "Astronomical twilight (−18°)"
+      }
+    }
+  }
+}

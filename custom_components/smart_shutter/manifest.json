@@ -1,0 +1,13 @@
+{
+  "domain": "smart_shutter",
+  "name": "Smart Shutter Control",
+  "version": "1.0.0",
+  "documentation": "https://github.com/bltDefender/smart-shutter-control-4ha",
+  "requirements": [],
+  "dependencies": ["sun"],
+  "after_dependencies": ["cover"],
+  "codeowners": ["@bltDefender"],
+  "config_flow": true,
+  "iot_class": "local_polling",
+  "integration_type": "hub"
+}
