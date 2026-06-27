@@ -107,8 +107,8 @@ def _main_schema(hass_config: dict | None = None) -> vol.Schema:
     lon = hass_config.get("longitude", 9.0) if hass_config else 9.0
     return vol.Schema(
         {
-            vol.Required(CONF_LATITUDE, default=lat): _number(-90, 90, 0.0001, "°"),
-            vol.Required(CONF_LONGITUDE, default=lon): _number(-180, 180, 0.0001, "°"),
+            vol.Required(CONF_LATITUDE, default=lat): _number(-90, 90, 0.001, "°"),
+            vol.Required(CONF_LONGITUDE, default=lon): _number(-180, 180, 0.001, "°"),
             vol.Required(CONF_TEMP_SENSORS): _temp_sensor_selector(),
             vol.Required(CONF_TEMP_THRESHOLD, default=DEFAULT_TEMP_THRESHOLD): _number(
                 0, 60, 0.5, "°C"
@@ -239,8 +239,8 @@ class SmartShutterOptionsFlow(config_entries.OptionsFlow):
         }
         schema = vol.Schema(
             {
-                vol.Required(CONF_LATITUDE, default=defaults["latitude"]): _number(-90, 90, 0.0001, "°"),
-                vol.Required(CONF_LONGITUDE, default=defaults["longitude"]): _number(-180, 180, 0.0001, "°"),
+                vol.Required(CONF_LATITUDE, default=defaults["latitude"]): _number(-90, 90, 0.001, "°"),
+                vol.Required(CONF_LONGITUDE, default=defaults["longitude"]): _number(-180, 180, 0.001, "°"),
                 vol.Required(
                     CONF_TEMP_SENSORS, default=_temp_sensor_default(merged.get(CONF_TEMP_SENSORS, []))
                 ): _temp_sensor_selector(),
