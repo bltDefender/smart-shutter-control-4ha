@@ -1,6 +1,4 @@
 {
   "name": "Smart Shutter Control",
-  "content_in_root": false,
-  "filename": "smart-shutter-card.js",
   "homeassistant": "2023.3.0"
 }
