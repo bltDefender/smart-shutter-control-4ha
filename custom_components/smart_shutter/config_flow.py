@@ -17,8 +17,6 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
     TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
 )
 
 from .const import (
@@ -44,7 +42,7 @@ from .const import (
     DEFAULT_SUNSET_TYPE,
     DEFAULT_TEMP_THRESHOLD,
     DOMAIN,
-    SUNSET_OPTIONS,
+
 )
 
 # ── Selector helpers ────────────────────────────────────────────────────────
@@ -72,14 +70,20 @@ def _number(min_val: float, max_val: float, step: float = 1.0, unit: str = "") -
     )
 
 
-def _select(options: list[str], translation_key: str | None = None) -> SelectSelector:
+def _select(options: list[dict]) -> SelectSelector:
     return SelectSelector(
         SelectSelectorConfig(
             options=options,
             mode=SelectSelectorMode.DROPDOWN,
-            translation_key=translation_key,
         )
     )
+
+
+SUNSET_SELECT_OPTIONS = [
+    {"value": "civil", "label": "Bürgerliche Dämmerung (−6°)"},
+    {"value": "nautical", "label": "Nautische Dämmerung (−12°)"},
+    {"value": "astronomical", "label": "Astronomische Dämmerung (−18°)"},
+]
 
 
 # ── Main config schema ──────────────────────────────────────────────────────
@@ -96,7 +100,7 @@ def _main_schema(hass_config: dict | None = None) -> vol.Schema:
                 0, 60, 0.5, "°C"
             ),
             vol.Required(CONF_SUNSET_TYPE, default=DEFAULT_SUNSET_TYPE): _select(
-                SUNSET_OPTIONS
+                SUNSET_SELECT_OPTIONS
             ),
         }
     )
@@ -108,9 +112,7 @@ def _window_schema(defaults: dict | None = None) -> vol.Schema:
     d = defaults or {}
     return vol.Schema(
         {
-            vol.Required(CONF_WINDOW_NAME, default=d.get(CONF_WINDOW_NAME, "")): TextSelector(
-                TextSelectorConfig(type=TextSelectorType.TEXT)
-            ),
+            vol.Required(CONF_WINDOW_NAME, default=d.get(CONF_WINDOW_NAME, "")): TextSelector(),
             vol.Required(
                 CONF_WINDOW_ORIENTATION, default=d.get(CONF_WINDOW_ORIENTATION, 180.0)
             ): _number(0, 359, 1, "°"),
@@ -228,7 +230,7 @@ class SmartShutterOptionsFlow(config_entries.OptionsFlow):
                 vol.Required(
                     CONF_SUNSET_TYPE,
                     default=merged.get(CONF_SUNSET_TYPE, DEFAULT_SUNSET_TYPE),
-                ): _select(SUNSET_OPTIONS),
+                ): _select(SUNSET_SELECT_OPTIONS),
             }
         )
         return self.async_show_form(

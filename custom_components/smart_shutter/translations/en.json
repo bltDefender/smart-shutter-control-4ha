@@ -97,14 +97,5 @@
     "abort": {
       "no_windows": "No windows configured."
     }
-  },
-  "selector": {
-    "sunset_type": {
-      "options": {
-        "civil": "Civil twilight (−6°)",
-        "nautical": "Nautical twilight (−12°)",
-        "astronomical": "Astronomical twilight (−18°)"
-      }
-    }
   }
 }

@@ -97,14 +97,5 @@
     "abort": {
       "no_windows": "Keine Fenster vorhanden."
     }
-  },
-  "selector": {
-    "sunset_type": {
-      "options": {
-        "civil": "Bürgerliche Dämmerung (−6°)",
-        "nautical": "Nautische Dämmerung (−12°)",
-        "astronomical": "Astronomische Dämmerung (−18°)"
-      }
-    }
   }
 }
