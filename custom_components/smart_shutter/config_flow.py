@@ -49,9 +49,23 @@ from .const import (
 
 
 def _temp_sensor_selector() -> EntitySelector:
-    return EntitySelector(
-        EntitySelectorConfig(domain="sensor", multiple=True)
-    )
+    return EntitySelector(EntitySelectorConfig(domain="sensor"))
+
+
+def _normalize_temp_sensors(value: Any) -> list[str]:
+    """Normalize selector output to a list for downstream consumers."""
+    if isinstance(value, str):
+        return [value] if value else []
+    if isinstance(value, list):
+        return value
+    return []
+
+
+def _temp_sensor_default(value: Any) -> str:
+    """Return one selector default while stored config remains a list."""
+    sensors = _normalize_temp_sensors(value)
+    # Single-entity selector is used for broad HA compatibility.
+    return sensors[0] if sensors else ""
 
 
 def _cover_selector() -> EntitySelector:
@@ -151,9 +165,11 @@ class SmartShutterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if not user_input.get(CONF_TEMP_SENSORS):
+            sensors = _normalize_temp_sensors(user_input.get(CONF_TEMP_SENSORS))
+            if not sensors:
                 errors[CONF_TEMP_SENSORS] = "no_sensors"
             else:
+                user_input[CONF_TEMP_SENSORS] = sensors
                 return self.async_create_entry(
                     title="Smart Shutter Control",
                     data=user_input,
@@ -207,10 +223,15 @@ class SmartShutterOptionsFlow(config_entries.OptionsFlow):
         merged = {**self._config_entry.data, **self._config_entry.options}
 
         if user_input is not None:
-            new_options = dict(self._config_entry.options)
-            new_options.update(user_input)
-            new_options[CONF_WINDOWS] = self._windows
-            return self.async_create_entry(title="", data=new_options)
+            sensors = _normalize_temp_sensors(user_input.get(CONF_TEMP_SENSORS))
+            if not sensors:
+                errors[CONF_TEMP_SENSORS] = "no_sensors"
+            else:
+                user_input[CONF_TEMP_SENSORS] = sensors
+                new_options = dict(self._config_entry.options)
+                new_options.update(user_input)
+                new_options[CONF_WINDOWS] = self._windows
+                return self.async_create_entry(title="", data=new_options)
 
         defaults = {
             "latitude": merged.get(CONF_LATITUDE, self.hass.config.latitude),
@@ -221,7 +242,7 @@ class SmartShutterOptionsFlow(config_entries.OptionsFlow):
                 vol.Required(CONF_LATITUDE, default=defaults["latitude"]): _number(-90, 90, 0.0001, "°"),
                 vol.Required(CONF_LONGITUDE, default=defaults["longitude"]): _number(-180, 180, 0.0001, "°"),
                 vol.Required(
-                    CONF_TEMP_SENSORS, default=merged.get(CONF_TEMP_SENSORS, [])
+                    CONF_TEMP_SENSORS, default=_temp_sensor_default(merged.get(CONF_TEMP_SENSORS, []))
                 ): _temp_sensor_selector(),
                 vol.Required(
                     CONF_TEMP_THRESHOLD,
