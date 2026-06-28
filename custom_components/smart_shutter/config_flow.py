@@ -26,6 +26,7 @@ from .const import (
     CONF_CUSTOM_COMMAND_TEMPLATE,
     CONF_CUSTOM_SERVICE,
     CONF_CUSTOM_TARGET_FIELD,
+    CONF_CUSTOM_TARGET_TEMPLATE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_POSITION_CLOSED,
@@ -47,6 +48,7 @@ from .const import (
     DEFAULT_CUSTOM_COMMAND_TEMPLATE,
     DEFAULT_CUSTOM_SERVICE,
     DEFAULT_CUSTOM_TARGET_FIELD,
+    DEFAULT_CUSTOM_TARGET_TEMPLATE,
     DEFAULT_POSITION_CLOSED,
     DEFAULT_POSITION_HALF,
     DEFAULT_POSITION_OPEN,
@@ -170,6 +172,10 @@ def _window_schema(defaults: dict | None = None) -> vol.Schema:
             vol.Optional(
                 CONF_CUSTOM_TARGET_FIELD,
                 default=d.get(CONF_CUSTOM_TARGET_FIELD, DEFAULT_CUSTOM_TARGET_FIELD),
+            ): TextSelector(),
+            vol.Optional(
+                CONF_CUSTOM_TARGET_TEMPLATE,
+                default=d.get(CONF_CUSTOM_TARGET_TEMPLATE, DEFAULT_CUSTOM_TARGET_TEMPLATE),
             ): TextSelector(),
             vol.Optional(
                 CONF_CUSTOM_COMMAND_FIELD,

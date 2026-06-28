@@ -74,11 +74,19 @@ Füge die Karte in **Einstellungen → Dashboards → Ressourcen** hinzu:
 
 - **Standard**: nutzt `cover.set_cover_position` mit der gewählten Entität.
 - **Custom Command**: ruft einen frei wählbaren Service (`domain.service`) auf und baut den
-  Befehl aus einem Template (z. B. `TuyaSend2 2,{position}`).
+  Befehl aus einem Template (z. B. `TuyaSend2 2,{position}`) sowie optional einen
+  Zielwert aus einem separaten Template.
   Verfügbare Platzhalter:
   - `{position}` → Zielposition in Prozent (z. B. 100/50/0)
   - `{state}` → `open`, `half_closed`, `closed`
   - `{entity_id}` → die gewählte Entität
+
+  Beispiel für MQTT direkt via `mqtt.publish`:
+  - `custom_service`: `mqtt.publish`
+  - `custom_target_field`: `topic`
+  - `custom_target_template`: `cmnd/Rollladen/4/TuyaSend2`
+  - `custom_command_field`: `payload`
+  - `custom_command_template`: `2,{position}`
 
 ---
 
