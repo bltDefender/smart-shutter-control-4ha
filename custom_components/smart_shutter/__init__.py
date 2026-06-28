@@ -34,5 +34,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update (e.g. added/removed windows)."""
+    """Reload the entry when options change (e.g. windows added or removed)."""
     await hass.config_entries.async_reload(entry.entry_id)

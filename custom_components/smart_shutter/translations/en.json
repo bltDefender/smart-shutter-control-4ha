@@ -12,8 +12,8 @@
           "sunset_type": "Sunset type"
         },
         "data_description": {
-          "temperature_sensors": "Averaged when multiple sensors are selected.",
-          "sunset_type": "Determines when the automation is deactivated in the evening.",
+          "temperature_sensors": "Multiple sensors are averaged.",
+          "sunset_type": "Determines from which sun elevation the automation is deactivated in the evening.",
           "temperature_threshold": "Shutters are only controlled above this outdoor temperature."
         }
       }
@@ -67,7 +67,7 @@
       "select_edit": {
         "title": "Select Window to Edit",
         "data": {
-          "window_id": "Window"
+          "id": "Window"
         }
       },
       "edit_window": {
@@ -86,13 +86,13 @@
       "select_remove": {
         "title": "Remove Window",
         "data": {
-          "window_id": "Window to remove"
+          "id": "Window to remove"
         }
       }
     },
     "error": {
       "name_required": "Please provide a name for the window.",
-      "angle_half_must_exceed_closed": "Half-close angle must be greater than fully-close angle."
+      "angle_half_must_exceed_closed": "Half-close angle must be greater than the fully-close angle."
     },
     "abort": {
       "no_windows": "No windows configured."

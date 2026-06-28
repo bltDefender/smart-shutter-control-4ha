@@ -7,7 +7,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_WINDOWS, DOMAIN, SHUTTER_CLOSED, SHUTTER_HALF, SHUTTER_OPEN
+from .const import (
+    CONF_WINDOW_ID,
+    CONF_WINDOWS,
+    DOMAIN,
+    SHUTTER_CLOSED,
+    SHUTTER_HALF,
+    SHUTTER_OPEN,
+)
 from .coordinator import SmartShutterCoordinator
 
 STATE_ICONS = {
@@ -25,22 +32,27 @@ async def async_setup_entry(
     """Set up sensor entities from a config entry."""
     coordinator: SmartShutterCoordinator = hass.data[DOMAIN][entry.entry_id]
     merged = {**entry.data, **entry.options}
-    windows = merged.get(CONF_WINDOWS, [])
+    windows: list[dict] = merged.get(CONF_WINDOWS, [])
 
     entities: list[SensorEntity] = [SmartShutterGlobalSensor(coordinator, entry)]
     for win in windows:
-        entities.append(SmartShutterWindowSensor(coordinator, entry, win["id"]))
+        entities.append(SmartShutterWindowSensor(coordinator, entry, win[CONF_WINDOW_ID]))
 
     async_add_entities(entities, update_before_add=True)
 
 
+# ── Global sensor ─────────────────────────────────────────────────────────
+
+
 class SmartShutterGlobalSensor(CoordinatorEntity[SmartShutterCoordinator], SensorEntity):
-    """Global sensor showing sun position and temperature."""
+    """Global sensor exposing sun position and ambient temperature."""
 
     _attr_has_entity_name = True
     _attr_icon = "mdi:weather-sunny"
 
-    def __init__(self, coordinator: SmartShutterCoordinator, entry: ConfigEntry) -> None:
+    def __init__(
+        self, coordinator: SmartShutterCoordinator, entry: ConfigEntry
+    ) -> None:
         super().__init__(coordinator)
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_global"
@@ -50,14 +62,13 @@ class SmartShutterGlobalSensor(CoordinatorEntity[SmartShutterCoordinator], Senso
     def native_value(self) -> str | None:
         if not self.coordinator.data:
             return None
-        elev = self.coordinator.data.get("sun_elevation", 0)
         return "Tag" if self.coordinator.data.get("is_daytime") else "Nacht"
 
     @property
     def extra_state_attributes(self) -> dict:
-        if not self.coordinator.data:
-            return {}
         d = self.coordinator.data
+        if not d:
+            return {}
         return {
             "sun_azimuth": d.get("sun_azimuth"),
             "sun_elevation": d.get("sun_elevation"),
@@ -68,8 +79,11 @@ class SmartShutterGlobalSensor(CoordinatorEntity[SmartShutterCoordinator], Senso
         }
 
 
+# ── Per-window sensor ─────────────────────────────────────────────────────
+
+
 class SmartShutterWindowSensor(CoordinatorEntity[SmartShutterCoordinator], SensorEntity):
-    """Per-window sensor exposing shutter state and all data needed by the Lovelace card."""
+    """Per-window sensor exposing the current shutter state and diagnostic data."""
 
     _attr_has_entity_name = True
 

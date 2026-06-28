@@ -12,8 +12,8 @@
           "sunset_type": "Sonnenuntergang-Typ"
         },
         "data_description": {
-          "temperature_sensors": "Wird gemittelt, wenn mehrere Sensoren ausgewählt sind.",
-          "sunset_type": "Bestimmt, wann die Automatik abends deaktiviert wird.",
+          "temperature_sensors": "Mehrere Sensoren werden gemittelt.",
+          "sunset_type": "Bestimmt, ab welcher Sonnenhöhe die Automatik abends deaktiviert wird.",
           "temperature_threshold": "Rollladen werden erst ab dieser Außentemperatur gesteuert."
         }
       }
@@ -67,7 +67,7 @@
       "select_edit": {
         "title": "Fenster zum Bearbeiten wählen",
         "data": {
-          "window_id": "Fenster"
+          "id": "Fenster"
         }
       },
       "edit_window": {
@@ -86,7 +86,7 @@
       "select_remove": {
         "title": "Fenster entfernen",
         "data": {
-          "window_id": "Zu entfernendes Fenster"
+          "id": "Zu entfernendes Fenster"
         }
       }
     },

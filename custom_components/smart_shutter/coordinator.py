@@ -5,6 +5,7 @@ import logging
 from datetime import timedelta
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -16,9 +17,12 @@ from .const import (
     CONF_POSITION_CLOSED,
     CONF_POSITION_HALF,
     CONF_POSITION_OPEN,
+    CONF_SUNSET_TYPE,
     CONF_TEMP_SENSORS,
     CONF_TEMP_THRESHOLD,
-    CONF_SUNSET_TYPE,
+    CONF_WINDOW_ID,
+    CONF_WINDOW_NAME,
+    CONF_WINDOW_ORIENTATION,
     CONF_WINDOWS,
     DEFAULT_ANGLE_FULLY_CLOSED,
     DEFAULT_ANGLE_HALF_CLOSED,
@@ -38,13 +42,17 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _compute_angle_diff(window_orientation: float, sun_azimuth: float) -> float:
-    """Return the minimum angular distance (0–180°) between window normal and sun azimuth."""
-    diff = abs(window_orientation - sun_azimuth) % 360
+# ── Pure calculation helpers ──────────────────────────────────────────────
+
+
+def _angle_diff(window_orientation: float, sun_azimuth: float) -> float:
+    """Return the minimum angular distance (0–180°) between two compass bearings."""
+    diff = abs(window_orientation - sun_azimuth) % 360.0
     return min(diff, 360.0 - diff)
 
 
-def _compute_shutter_state(
+def _desired_shutter_state(
+    *,
     angle_diff: float,
     sun_elevation: float,
     avg_temp: float,
@@ -53,7 +61,15 @@ def _compute_shutter_state(
     angle_fully_closed: float,
     angle_half_closed: float,
 ) -> str:
-    """Return the desired shutter state given current conditions."""
+    """Return the desired shutter state for a single window.
+
+    Priority (highest first):
+    1. Night / below sunset elevation → always open.
+    2. Temperature below threshold → always open.
+    3. Sun directly facing window (angle < fully-closed zone) → closed.
+    4. Sun at oblique angle (angle < half-closed zone) → half closed.
+    5. Otherwise → open.
+    """
     if sun_elevation <= sunset_elevation:
         return SHUTTER_OPEN
     if avg_temp < temp_threshold:
@@ -65,10 +81,13 @@ def _compute_shutter_state(
     return SHUTTER_OPEN
 
 
-class SmartShutterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Manages sun position tracking, temperature averaging, and shutter control."""
+# ── Coordinator ───────────────────────────────────────────────────────────
 
-    def __init__(self, hass: HomeAssistant, config_entry) -> None:
+
+class SmartShutterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Manage sun/temperature polling and per-window shutter control."""
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         super().__init__(
             hass,
             _LOGGER,
@@ -76,12 +95,12 @@ class SmartShutterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=UPDATE_INTERVAL_MINUTES),
         )
         self.config_entry = config_entry
-        # Track the last commanded state per window id to avoid redundant service calls
+        # Track the last commanded state per window id to avoid redundant calls.
         self._commanded_states: dict[str, str] = {}
         self._unsub_listeners: list = []
 
     async def async_setup(self) -> None:
-        """Register state-change listeners."""
+        """Register state-change listeners for sun and temperature sensors."""
         merged = {**self.config_entry.data, **self.config_entry.options}
         temp_sensors: list[str] = merged.get(CONF_TEMP_SENSORS, [])
 
@@ -93,28 +112,31 @@ class SmartShutterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     async def async_teardown(self) -> None:
-        """Unregister all listeners."""
+        """Unregister all state-change listeners."""
         for unsub in self._unsub_listeners:
             unsub()
         self._unsub_listeners.clear()
 
     @callback
-    def _on_state_change(self, event) -> None:  # noqa: ANN001
+    def _on_state_change(self, event: Any) -> None:
+        """Trigger a coordinator refresh when a tracked entity changes."""
         self.hass.async_create_task(self.async_request_refresh())
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch sun + temperature data, compute and apply shutter states."""
+        """Fetch sun + temperature, compute and apply shutter states."""
         merged = {**self.config_entry.data, **self.config_entry.options}
 
-        # --- Sun ---
+        # ── Sun ──────────────────────────────────────────────────────────
         sun_state = self.hass.states.get("sun.sun")
         if not sun_state:
-            raise UpdateFailed("sun.sun entity not found – is the sun integration loaded?")
+            raise UpdateFailed(
+                "sun.sun entity not found – make sure the 'sun' integration is loaded."
+            )
 
         sun_azimuth = float(sun_state.attributes.get("azimuth", 0.0))
         sun_elevation = float(sun_state.attributes.get("elevation", -90.0))
 
-        # --- Temperature ---
+        # ── Temperature ───────────────────────────────────────────────────
         temp_sensors: list[str] = merged.get(CONF_TEMP_SENSORS, [])
         temps: list[float] = []
         for sensor_id in temp_sensors:
@@ -123,52 +145,52 @@ class SmartShutterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 try:
                     temps.append(float(state.state))
                 except ValueError:
-                    _LOGGER.warning("Could not parse temperature from %s: %s", sensor_id, state.state)
+                    _LOGGER.warning(
+                        "Cannot parse temperature from %s: %r", sensor_id, state.state
+                    )
 
         avg_temp = sum(temps) / len(temps) if temps else 0.0
-
-        temp_threshold: float = merged.get(CONF_TEMP_THRESHOLD, DEFAULT_TEMP_THRESHOLD)
+        temp_threshold: float = float(merged.get(CONF_TEMP_THRESHOLD, DEFAULT_TEMP_THRESHOLD))
         sunset_type: str = merged.get(CONF_SUNSET_TYPE, DEFAULT_SUNSET_TYPE)
         sunset_elev: float = SUNSET_ELEVATION[sunset_type]
 
         is_daytime = sun_elevation > sunset_elev
         temp_active = avg_temp >= temp_threshold
 
-        # --- Windows ---
+        # ── Windows ───────────────────────────────────────────────────────
         windows: list[dict] = merged.get(CONF_WINDOWS, [])
         window_data: dict[str, dict[str, Any]] = {}
 
         for win in windows:
-            wid = win["id"]
-            orientation = float(win.get("orientation", 180.0))
-            angle_fully_closed = float(win.get(CONF_ANGLE_FULLY_CLOSED, DEFAULT_ANGLE_FULLY_CLOSED))
-            angle_half_closed = float(win.get(CONF_ANGLE_HALF_CLOSED, DEFAULT_ANGLE_HALF_CLOSED))
+            wid: str = win[CONF_WINDOW_ID]
+            orientation = float(win.get(CONF_WINDOW_ORIENTATION, 180.0))
+            angle_fc = float(win.get(CONF_ANGLE_FULLY_CLOSED, DEFAULT_ANGLE_FULLY_CLOSED))
+            angle_hc = float(win.get(CONF_ANGLE_HALF_CLOSED, DEFAULT_ANGLE_HALF_CLOSED))
+            diff = _angle_diff(orientation, sun_azimuth)
 
-            angle_diff = _compute_angle_diff(orientation, sun_azimuth)
-
-            desired = _compute_shutter_state(
-                angle_diff=angle_diff,
+            desired = _desired_shutter_state(
+                angle_diff=diff,
                 sun_elevation=sun_elevation,
                 avg_temp=avg_temp,
                 temp_threshold=temp_threshold,
                 sunset_elevation=sunset_elev,
-                angle_fully_closed=angle_fully_closed,
-                angle_half_closed=angle_half_closed,
+                angle_fully_closed=angle_fc,
+                angle_half_closed=angle_hc,
             )
 
             await self._apply_shutter_state(wid, desired, win)
 
             window_data[wid] = {
-                "name": win.get("name", wid),
+                "name": win.get(CONF_WINDOW_NAME, wid),
                 "state": desired,
                 "orientation": orientation,
-                "angle_diff": round(angle_diff, 1),
+                "angle_diff": round(diff, 1),
                 "sun_azimuth": round(sun_azimuth, 1),
                 "sun_elevation": round(sun_elevation, 1),
                 "temperature": round(avg_temp, 1),
                 "temp_threshold": temp_threshold,
-                "angle_fully_closed": angle_fully_closed,
-                "angle_half_closed": angle_half_closed,
+                "angle_fully_closed": angle_fc,
+                "angle_half_closed": angle_hc,
                 "is_daytime": is_daytime,
                 "temp_active": temp_active,
                 "automation_active": is_daytime and temp_active,
@@ -187,20 +209,21 @@ class SmartShutterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _apply_shutter_state(
         self, window_id: str, desired: str, win_cfg: dict
     ) -> None:
-        """Call cover service if the desired state differs from the last commanded state."""
+        """Send a cover service call only when the state has actually changed."""
         if self._commanded_states.get(window_id) == desired:
             return
 
-        cover_entity = win_cfg.get(CONF_COVER_ENTITY)
+        cover_entity: str | None = win_cfg.get(CONF_COVER_ENTITY)
         if not cover_entity:
             return
 
-        if desired == SHUTTER_OPEN:
-            position = int(win_cfg.get(CONF_POSITION_OPEN, DEFAULT_POSITION_OPEN))
-        elif desired == SHUTTER_HALF:
-            position = int(win_cfg.get(CONF_POSITION_HALF, DEFAULT_POSITION_HALF))
-        else:
-            position = int(win_cfg.get(CONF_POSITION_CLOSED, DEFAULT_POSITION_CLOSED))
+        position_map = {
+            SHUTTER_OPEN: int(win_cfg.get(CONF_POSITION_OPEN, DEFAULT_POSITION_OPEN)),
+            SHUTTER_HALF: int(win_cfg.get(CONF_POSITION_HALF, DEFAULT_POSITION_HALF)),
+            SHUTTER_CLOSED: int(win_cfg.get(CONF_POSITION_CLOSED, DEFAULT_POSITION_CLOSED)),
+        }
+        position = position_map[desired]
+        name = win_cfg.get(CONF_WINDOW_NAME, window_id)
 
         try:
             await self.hass.services.async_call(
@@ -211,15 +234,9 @@ class SmartShutterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             self._commanded_states[window_id] = desired
             _LOGGER.info(
-                "Window '%s': state → %s (position %d)",
-                win_cfg.get("name", window_id),
-                desired,
-                position,
+                "Window '%s': %s → position %d", name, desired, position
             )
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
-                "Window '%s': failed to set position %d – %s",
-                win_cfg.get("name", window_id),
-                position,
-                err,
+                "Window '%s': failed to set position %d – %s", name, position, err
             )
