@@ -19,6 +19,7 @@ from .const import (
     CONF_CUSTOM_COMMAND_TEMPLATE,
     CONF_CUSTOM_SERVICE,
     CONF_CUSTOM_TARGET_FIELD,
+    CONF_CUSTOM_TARGET_TEMPLATE,
     CONF_POSITION_CLOSED,
     CONF_POSITION_HALF,
     CONF_POSITION_OPEN,
@@ -37,6 +38,7 @@ from .const import (
     DEFAULT_CUSTOM_COMMAND_TEMPLATE,
     DEFAULT_CUSTOM_SERVICE,
     DEFAULT_CUSTOM_TARGET_FIELD,
+    DEFAULT_CUSTOM_TARGET_TEMPLATE,
     DEFAULT_POSITION_CLOSED,
     DEFAULT_POSITION_HALF,
     DEFAULT_POSITION_OPEN,
@@ -257,11 +259,12 @@ class SmartShutterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 command_template: str = win_cfg.get(
                     CONF_CUSTOM_COMMAND_TEMPLATE, DEFAULT_CUSTOM_COMMAND_TEMPLATE
                 )
-                command = command_template.format(
-                    position=position,
-                    state=desired,
-                    entity_id=cover_entity,
-                )
+                format_values = {
+                    "position": position,
+                    "state": desired,
+                    "entity_id": cover_entity,
+                }
+                command = command_template.format(**format_values)
                 command_field = (
                     win_cfg.get(CONF_CUSTOM_COMMAND_FIELD, DEFAULT_CUSTOM_COMMAND_FIELD)
                     or DEFAULT_CUSTOM_COMMAND_FIELD
@@ -269,7 +272,10 @@ class SmartShutterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 target_field = win_cfg.get(CONF_CUSTOM_TARGET_FIELD, DEFAULT_CUSTOM_TARGET_FIELD)
                 service_data: dict[str, Any] = {command_field: command}
                 if target_field:
-                    service_data[target_field] = cover_entity
+                    target_template = win_cfg.get(
+                        CONF_CUSTOM_TARGET_TEMPLATE, DEFAULT_CUSTOM_TARGET_TEMPLATE
+                    )
+                    service_data[target_field] = str(target_template).format(**format_values)
                 await self.hass.services.async_call(
                     service_domain,
                     service_name,
