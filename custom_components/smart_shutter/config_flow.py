@@ -99,10 +99,10 @@ def _global_schema(lat: float = 48.0, lon: float = 9.0, defaults: dict | None = 
     return vol.Schema(
         {
             vol.Required(CONF_LATITUDE, default=d.get(CONF_LATITUDE, lat)): _number(
-                -90, 90, 0.0001, "°"
+                -90, 90, 0.001, "°"
             ),
             vol.Required(CONF_LONGITUDE, default=d.get(CONF_LONGITUDE, lon)): _number(
-                -180, 180, 0.0001, "°"
+                -180, 180, 0.001, "°"
             ),
             vol.Required(
                 CONF_TEMP_SENSORS, default=d.get(CONF_TEMP_SENSORS, [])
