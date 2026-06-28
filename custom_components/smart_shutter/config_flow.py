@@ -20,7 +20,12 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_ANGLE_FULLY_CLOSED,
     CONF_ANGLE_HALF_CLOSED,
+    CONF_CONTROL_MODE,
     CONF_COVER_ENTITY,
+    CONF_CUSTOM_COMMAND_FIELD,
+    CONF_CUSTOM_COMMAND_TEMPLATE,
+    CONF_CUSTOM_SERVICE,
+    CONF_CUSTOM_TARGET_FIELD,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_POSITION_CLOSED,
@@ -33,8 +38,15 @@ from .const import (
     CONF_WINDOW_NAME,
     CONF_WINDOW_ORIENTATION,
     CONF_WINDOWS,
+    CONTROL_MODE_CUSTOM,
+    CONTROL_MODE_STANDARD,
     DEFAULT_ANGLE_FULLY_CLOSED,
     DEFAULT_ANGLE_HALF_CLOSED,
+    DEFAULT_CONTROL_MODE,
+    DEFAULT_CUSTOM_COMMAND_FIELD,
+    DEFAULT_CUSTOM_COMMAND_TEMPLATE,
+    DEFAULT_CUSTOM_SERVICE,
+    DEFAULT_CUSTOM_TARGET_FIELD,
     DEFAULT_POSITION_CLOSED,
     DEFAULT_POSITION_HALF,
     DEFAULT_POSITION_OPEN,
@@ -51,7 +63,7 @@ def _temp_sensor_selector() -> EntitySelector:
 
 
 def _cover_selector() -> EntitySelector:
-    return EntitySelector(EntitySelectorConfig(domain="cover"))
+    return EntitySelector(EntitySelectorConfig())
 
 
 def _number(min_val: float, max_val: float, step: float = 1.0, unit: str = "") -> NumberSelector:
@@ -88,6 +100,15 @@ def _validate_window(data: dict) -> dict[str, str]:
     angle_half = float(data.get(CONF_ANGLE_HALF_CLOSED, DEFAULT_ANGLE_HALF_CLOSED))
     if angle_closed >= angle_half:
         errors[CONF_ANGLE_HALF_CLOSED] = "angle_half_must_exceed_closed"
+    if data.get(CONF_CONTROL_MODE, DEFAULT_CONTROL_MODE) == CONTROL_MODE_CUSTOM:
+        custom_service = data.get(CONF_CUSTOM_SERVICE, "").strip()
+        command_template = data.get(CONF_CUSTOM_COMMAND_TEMPLATE, "").strip()
+        if not custom_service:
+            errors[CONF_CUSTOM_SERVICE] = "custom_service_required"
+        elif "." not in custom_service:
+            errors[CONF_CUSTOM_SERVICE] = "custom_service_invalid"
+        if not command_template:
+            errors[CONF_CUSTOM_COMMAND_TEMPLATE] = "custom_command_required"
     return errors
 
 
@@ -133,6 +154,31 @@ def _window_schema(defaults: dict | None = None) -> vol.Schema:
             vol.Required(
                 CONF_COVER_ENTITY, default=d.get(CONF_COVER_ENTITY, "")
             ): _cover_selector(),
+            vol.Required(
+                CONF_CONTROL_MODE,
+                default=d.get(CONF_CONTROL_MODE, DEFAULT_CONTROL_MODE),
+            ): _select(
+                [
+                    {"value": CONTROL_MODE_STANDARD, "label": "Standard (cover.set_cover_position)"},
+                    {"value": CONTROL_MODE_CUSTOM, "label": "Custom Command"},
+                ]
+            ),
+            vol.Optional(
+                CONF_CUSTOM_SERVICE,
+                default=d.get(CONF_CUSTOM_SERVICE, DEFAULT_CUSTOM_SERVICE),
+            ): TextSelector(),
+            vol.Optional(
+                CONF_CUSTOM_TARGET_FIELD,
+                default=d.get(CONF_CUSTOM_TARGET_FIELD, DEFAULT_CUSTOM_TARGET_FIELD),
+            ): TextSelector(),
+            vol.Optional(
+                CONF_CUSTOM_COMMAND_FIELD,
+                default=d.get(CONF_CUSTOM_COMMAND_FIELD, DEFAULT_CUSTOM_COMMAND_FIELD),
+            ): TextSelector(),
+            vol.Optional(
+                CONF_CUSTOM_COMMAND_TEMPLATE,
+                default=d.get(CONF_CUSTOM_COMMAND_TEMPLATE, DEFAULT_CUSTOM_COMMAND_TEMPLATE),
+            ): TextSelector(),
             vol.Optional(
                 CONF_POSITION_OPEN,
                 default=d.get(CONF_POSITION_OPEN, DEFAULT_POSITION_OPEN),

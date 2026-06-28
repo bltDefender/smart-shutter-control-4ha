@@ -67,8 +67,18 @@ Füge die Karte in **Einstellungen → Dashboards → Ressourcen** hinzu:
    - Temperaturschwelle (Standard: 30 °C)
    - Sonnenuntergang-Typ
 3. Nach dem Einrichten: **Konfigurieren** → Fenster verwalten:
-   - **Fenster hinzufügen** – Name, Ausrichtung, Cover-Entität, Positionen, Winkelschwellen
+   - **Fenster hinzufügen** – Name, Ausrichtung, Ziel-Entität, Steuerungsmodus, Positionen, Winkelschwellen
    - **Fenster bearbeiten / entfernen** – jederzeit änderbar
+
+### Steuerungsmodi pro Fenster
+
+- **Standard**: nutzt `cover.set_cover_position` mit der gewählten Entität.
+- **Custom Command**: ruft einen frei wählbaren Service (`domain.service`) auf und baut den
+  Befehl aus einem Template (z. B. `TuyaSend2 2,{position}`).
+  Verfügbare Platzhalter:
+  - `{position}` → Zielposition in Prozent (z. B. 100/50/0)
+  - `{state}` → `open`, `half_closed`, `closed`
+  - `{entity_id}` → die gewählte Entität
 
 ---
 
@@ -122,4 +132,4 @@ Sonnenposition und Temperaturstatus.
 
 - Home Assistant ≥ 2023.3
 - Built-in `sun` Integration muss aktiv sein
-- Rollladen müssen als `cover`-Entität in HA vorhanden sein
+- Für Standard-Modus sollte die Ziel-Entität `cover.set_cover_position` unterstützen

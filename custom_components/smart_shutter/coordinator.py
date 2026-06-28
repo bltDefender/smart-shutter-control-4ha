@@ -13,7 +13,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     CONF_ANGLE_FULLY_CLOSED,
     CONF_ANGLE_HALF_CLOSED,
+    CONF_CONTROL_MODE,
     CONF_COVER_ENTITY,
+    CONF_CUSTOM_COMMAND_FIELD,
+    CONF_CUSTOM_COMMAND_TEMPLATE,
+    CONF_CUSTOM_SERVICE,
+    CONF_CUSTOM_TARGET_FIELD,
     CONF_POSITION_CLOSED,
     CONF_POSITION_HALF,
     CONF_POSITION_OPEN,
@@ -24,8 +29,14 @@ from .const import (
     CONF_WINDOW_NAME,
     CONF_WINDOW_ORIENTATION,
     CONF_WINDOWS,
+    CONTROL_MODE_CUSTOM,
+    DEFAULT_CONTROL_MODE,
     DEFAULT_ANGLE_FULLY_CLOSED,
     DEFAULT_ANGLE_HALF_CLOSED,
+    DEFAULT_CUSTOM_COMMAND_FIELD,
+    DEFAULT_CUSTOM_COMMAND_TEMPLATE,
+    DEFAULT_CUSTOM_SERVICE,
+    DEFAULT_CUSTOM_TARGET_FIELD,
     DEFAULT_POSITION_CLOSED,
     DEFAULT_POSITION_HALF,
     DEFAULT_POSITION_OPEN,
@@ -225,13 +236,43 @@ class SmartShutterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         position = position_map[desired]
         name = win_cfg.get(CONF_WINDOW_NAME, window_id)
 
+        control_mode = win_cfg.get(CONF_CONTROL_MODE, DEFAULT_CONTROL_MODE)
+
         try:
-            await self.hass.services.async_call(
-                "cover",
-                "set_cover_position",
-                {"entity_id": cover_entity, "position": position},
-                blocking=False,
-            )
+            if control_mode == CONTROL_MODE_CUSTOM:
+                custom_service: str = win_cfg.get(CONF_CUSTOM_SERVICE, DEFAULT_CUSTOM_SERVICE)
+                if "." not in custom_service:
+                    raise ValueError(f"Invalid custom service '{custom_service}'")
+                service_domain, service_name = custom_service.split(".", 1)
+                command_template: str = win_cfg.get(
+                    CONF_CUSTOM_COMMAND_TEMPLATE, DEFAULT_CUSTOM_COMMAND_TEMPLATE
+                )
+                command = command_template.format(
+                    position=position,
+                    state=desired,
+                    entity_id=cover_entity,
+                )
+                command_field = (
+                    win_cfg.get(CONF_CUSTOM_COMMAND_FIELD, DEFAULT_CUSTOM_COMMAND_FIELD)
+                    or DEFAULT_CUSTOM_COMMAND_FIELD
+                )
+                target_field = win_cfg.get(CONF_CUSTOM_TARGET_FIELD, DEFAULT_CUSTOM_TARGET_FIELD)
+                service_data: dict[str, Any] = {command_field: command}
+                if target_field:
+                    service_data[target_field] = cover_entity
+                await self.hass.services.async_call(
+                    service_domain,
+                    service_name,
+                    service_data,
+                    blocking=False,
+                )
+            else:
+                await self.hass.services.async_call(
+                    "cover",
+                    "set_cover_position",
+                    {"entity_id": cover_entity, "position": position},
+                    blocking=False,
+                )
             self._commanded_states[window_id] = desired
             _LOGGER.info(
                 "Window '%s': %s → position %d", name, desired, position

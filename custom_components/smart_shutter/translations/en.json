@@ -52,6 +52,11 @@
           "name": "Name",
           "orientation": "Orientation (compass bearing, direction window faces)",
           "cover_entity": "Shutter entity",
+          "control_mode": "Control mode",
+          "custom_service": "Custom service (domain.service)",
+          "custom_target_field": "Target entity field name",
+          "custom_command_field": "Command field name",
+          "custom_command_template": "Custom command template",
           "position_open": "Position fully open (%)",
           "position_half": "Position half-closed (%)",
           "position_closed": "Position fully closed (%)",
@@ -60,6 +65,11 @@
         },
         "data_description": {
           "orientation": "0° = North, 90° = East, 180° = South, 270° = West.",
+          "control_mode": "Standard mode uses cover.set_cover_position. Custom mode calls the configured service.",
+          "custom_service": "Only for custom mode, e.g. tasmota.send_command.",
+          "custom_target_field": "Only for custom mode: service data key for the selected entity (leave empty if not needed).",
+          "custom_command_field": "Only for custom mode: service data key used for the command.",
+          "custom_command_template": "Only for custom mode: placeholders {position}, {state}, {entity_id} are allowed (e.g. TuyaSend2 2,{position}).",
           "angle_fully_closed": "Below this angular distance to the sun the shutter is fully closed.",
           "angle_half_closed": "Below this angular distance to the sun the shutter is half-closed."
         }
@@ -76,6 +86,11 @@
           "name": "Name",
           "orientation": "Orientation (compass bearing)",
           "cover_entity": "Shutter entity",
+          "control_mode": "Control mode",
+          "custom_service": "Custom service (domain.service)",
+          "custom_target_field": "Target entity field name",
+          "custom_command_field": "Command field name",
+          "custom_command_template": "Custom command template",
           "position_open": "Position fully open (%)",
           "position_half": "Position half-closed (%)",
           "position_closed": "Position fully closed (%)",
@@ -92,7 +107,10 @@
     },
     "error": {
       "name_required": "Please provide a name for the window.",
-      "angle_half_must_exceed_closed": "Half-close angle must be greater than the fully-close angle."
+      "angle_half_must_exceed_closed": "Half-close angle must be greater than the fully-close angle.",
+      "custom_service_required": "Please provide a custom service.",
+      "custom_service_invalid": "Custom service must use domain.service format.",
+      "custom_command_required": "Please provide a custom command template."
     },
     "abort": {
       "no_windows": "No windows configured."
