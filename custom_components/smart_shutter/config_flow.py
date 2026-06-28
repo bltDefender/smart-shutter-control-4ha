@@ -214,11 +214,14 @@ class SmartShutterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class SmartShutterOptionsFlow(config_entries.OptionsFlow):
-    """Handle options: manage windows and global settings."""
+    """Handle options: manage windows and global settings.
+
+    Home Assistant guarantees that ``async_step_init`` is always called first,
+    so ``self._windows`` is populated there (``self.config_entry`` is only
+    available after the parent class initialises the flow, not in ``__init__``).
+    """
 
     def __init__(self) -> None:
-        # _windows is populated lazily in async_step_init so that
-        # self.config_entry (set by the parent class) is available.
         self._windows: list[dict] = []
         self._editing_id: str | None = None
 

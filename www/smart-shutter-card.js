@@ -50,10 +50,12 @@ function compassToXY(bearing, r, cx, cy) {
 /**
  * Build an SVG arc-sector path that correctly handles wraparound bearings.
  * The sector sweeps clockwise from `fromBearing` to `toBearing` (compass).
- * Both angles should already be in [0, 360).
+ * Bearings are normalised internally so any numeric value is accepted.
  */
 function sectorPath(fromBearing, toBearing, r, cx, cy) {
-  // Always sweep clockwise; ensure non-negative delta.
+  // Normalise inputs to [0, 360) before computing the clockwise delta.
+  fromBearing = ((fromBearing % 360) + 360) % 360;
+  toBearing   = ((toBearing   % 360) + 360) % 360;
   const delta = ((toBearing - fromBearing) + 360) % 360;
   // Degenerate: zero-width sector
   if (delta === 0) return "";
