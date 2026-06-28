@@ -128,6 +128,16 @@ class SmartShutterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             unsub()
         self._unsub_listeners.clear()
 
+    async def async_force_update(self) -> None:
+        """Clear the commanded-state cache and immediately re-apply all shutter states.
+
+        This causes every window to resend its cover command regardless of whether
+        the state has changed, which is useful for debugging (e.g. to verify MQTT
+        commands on the broker).
+        """
+        self._commanded_states.clear()
+        await self.async_request_refresh()
+
     @callback
     def _on_state_change(self, event: Any) -> None:
         """Trigger a coordinator refresh when a tracked entity changes."""
