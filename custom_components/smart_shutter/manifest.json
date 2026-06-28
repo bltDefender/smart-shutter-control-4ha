@@ -1,7 +1,7 @@
 {
   "domain": "smart_shutter",
   "name": "Smart Shutter Control",
-  "version": "1.0.0",
+  "version": "0.9.7",
   "documentation": "https://github.com/bltDefender/smart-shutter-control-4ha",
   "requirements": [],
   "dependencies": ["sun"],
