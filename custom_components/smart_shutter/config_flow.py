@@ -12,10 +12,8 @@ from homeassistant.helpers.selector import (
     EntitySelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
-    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
-    SelectSelectorMode,
     TextSelector,
 )
 
@@ -56,27 +54,19 @@ def _cover_selector() -> EntitySelector:
     return EntitySelector(EntitySelectorConfig(domain="cover"))
 
 
-def _number(
-    min_val: float, max_val: float, step: float = 1.0, unit: str = ""
-) -> NumberSelector:
+def _number(min_val: float, max_val: float, step: float = 1.0, unit: str = "") -> NumberSelector:
     return NumberSelector(
         NumberSelectorConfig(
             min=min_val,
             max=max_val,
             step=step,
             unit_of_measurement=unit,
-            mode=NumberSelectorMode.BOX,
         )
     )
 
 
-def _select(options: list[dict]) -> SelectSelector:
-    return SelectSelector(
-        SelectSelectorConfig(
-            options=options,
-            mode=SelectSelectorMode.DROPDOWN,
-        )
-    )
+def _select(options: list[dict[str, str]]) -> SelectSelector:
+    return SelectSelector(SelectSelectorConfig(options=options))
 
 
 SUNSET_SELECT_OPTIONS = [
@@ -308,7 +298,7 @@ class SmartShutterOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_WINDOW_ID): SelectSelector(
-                        SelectSelectorConfig(options=options, mode=SelectSelectorMode.LIST)
+                        SelectSelectorConfig(options=options)
                     )
                 }
             ),
@@ -366,7 +356,7 @@ class SmartShutterOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_WINDOW_ID): SelectSelector(
-                        SelectSelectorConfig(options=options, mode=SelectSelectorMode.LIST)
+                        SelectSelectorConfig(options=options)
                     )
                 }
             ),
