@@ -12,10 +12,8 @@ from homeassistant.helpers.selector import (
     EntitySelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
-    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
-    SelectSelectorMode,
     TextSelector,
 )
 
@@ -56,33 +54,25 @@ def _cover_selector() -> EntitySelector:
     return EntitySelector(EntitySelectorConfig(domain="cover"))
 
 
-def _number(
-    min_val: float, max_val: float, step: float = 1.0, unit: str = ""
-) -> NumberSelector:
+def _number(min_val: float, max_val: float, step: float = 1.0, unit: str = "") -> NumberSelector:
     return NumberSelector(
         NumberSelectorConfig(
             min=min_val,
             max=max_val,
             step=step,
             unit_of_measurement=unit,
-            mode=NumberSelectorMode.BOX,
         )
     )
 
 
-def _select(options: list[dict]) -> SelectSelector:
-    return SelectSelector(
-        SelectSelectorConfig(
-            options=options,
-            mode=SelectSelectorMode.DROPDOWN,
-        )
-    )
+def _select(options: list[str]) -> SelectSelector:
+    return SelectSelector(SelectSelectorConfig(options=options))
 
 
 SUNSET_SELECT_OPTIONS = [
-    {"value": "civil", "label": "Bürgerliche Dämmerung (−6°)"},
-    {"value": "nautical", "label": "Nautische Dämmerung (−12°)"},
-    {"value": "astronomical", "label": "Astronomische Dämmerung (−18°)"},
+    "civil",
+    "nautical",
+    "astronomical",
 ]
 
 
@@ -300,7 +290,7 @@ class SmartShutterOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_edit_window()
 
         options = [
-            {"value": w[CONF_WINDOW_ID], "label": w.get(CONF_WINDOW_NAME, w[CONF_WINDOW_ID])}
+            w[CONF_WINDOW_ID]
             for w in self._windows
         ]
         return self.async_show_form(
@@ -308,7 +298,7 @@ class SmartShutterOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_WINDOW_ID): SelectSelector(
-                        SelectSelectorConfig(options=options, mode=SelectSelectorMode.LIST)
+                        SelectSelectorConfig(options=options)
                     )
                 }
             ),
@@ -358,7 +348,7 @@ class SmartShutterOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=new_opts)
 
         options = [
-            {"value": w[CONF_WINDOW_ID], "label": w.get(CONF_WINDOW_NAME, w[CONF_WINDOW_ID])}
+            w[CONF_WINDOW_ID]
             for w in self._windows
         ]
         return self.async_show_form(
@@ -366,7 +356,7 @@ class SmartShutterOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_WINDOW_ID): SelectSelector(
-                        SelectSelectorConfig(options=options, mode=SelectSelectorMode.LIST)
+                        SelectSelectorConfig(options=options)
                     )
                 }
             ),
