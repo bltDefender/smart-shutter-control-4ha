@@ -99,6 +99,32 @@ Die Karte zeigt:
 
 ---
 
+## Services
+
+### `smart_shutter.force_update`
+
+Setzt den internen Zustandscache zurück und sendet die Rollladenbefehle für **alle konfigurierten Fenster** sofort erneut – unabhängig vom zuletzt gesendeten Zustand.
+
+**Wofür nützlich?**  
+Zum Überprüfen, ob die richtigen Befehle (z. B. `TuyaSend2 2,XX` via MQTT) tatsächlich ankommen, ohne auf die nächste automatische Aktualisierung warten zu müssen.
+
+**Aufruf über Developer Tools:**
+```yaml
+service: smart_shutter.force_update
+```
+
+**Als Button-Karte in Lovelace einbinden:**
+```yaml
+type: button
+name: Rollladen-Befehle erneut senden
+icon: mdi:refresh
+tap_action:
+  action: call-service
+  service: smart_shutter.force_update
+```
+
+---
+
 ## Entities
 
 Pro Fenster wird eine Sensor-Entity erstellt:

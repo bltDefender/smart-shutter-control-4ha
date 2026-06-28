@@ -115,5 +115,11 @@
     "abort": {
       "no_windows": "No windows configured."
     }
+  },
+  "services": {
+    "force_update": {
+      "name": "Force Update",
+      "description": "Clears the internal state cache and immediately re-sends shutter commands for all configured windows, regardless of the last commanded state. Useful for verifying that the correct commands (e.g. via MQTT) are being sent."
+    }
   }
 }

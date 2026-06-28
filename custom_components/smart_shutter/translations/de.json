@@ -115,5 +115,11 @@
     "abort": {
       "no_windows": "Keine Fenster vorhanden."
     }
+  },
+  "services": {
+    "force_update": {
+      "name": "Sofortaktualisierung",
+      "description": "Setzt den internen Zustandscache zurück und sendet die Rollladenbefehle für alle konfigurierten Fenster sofort erneut – unabhängig vom zuletzt gesendeten Zustand. Nützlich zum Testen, ob die richtigen Befehle (z. B. via MQTT) ankommen."
+    }
   }
 }
