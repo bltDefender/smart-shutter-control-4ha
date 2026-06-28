@@ -65,14 +65,14 @@ def _number(min_val: float, max_val: float, step: float = 1.0, unit: str = "") -
     )
 
 
-def _select(options: list[str]) -> SelectSelector:
+def _select(options: list[dict[str, str]]) -> SelectSelector:
     return SelectSelector(SelectSelectorConfig(options=options))
 
 
 SUNSET_SELECT_OPTIONS = [
-    "civil",
-    "nautical",
-    "astronomical",
+    {"value": "civil", "label": "Bürgerliche Dämmerung (−6°)"},
+    {"value": "nautical", "label": "Nautische Dämmerung (−12°)"},
+    {"value": "astronomical", "label": "Astronomische Dämmerung (−18°)"},
 ]
 
 
@@ -290,7 +290,7 @@ class SmartShutterOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_edit_window()
 
         options = [
-            w[CONF_WINDOW_ID]
+            {"value": w[CONF_WINDOW_ID], "label": w.get(CONF_WINDOW_NAME, w[CONF_WINDOW_ID])}
             for w in self._windows
         ]
         return self.async_show_form(
@@ -348,7 +348,7 @@ class SmartShutterOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=new_opts)
 
         options = [
-            w[CONF_WINDOW_ID]
+            {"value": w[CONF_WINDOW_ID], "label": w.get(CONF_WINDOW_NAME, w[CONF_WINDOW_ID])}
             for w in self._windows
         ]
         return self.async_show_form(
